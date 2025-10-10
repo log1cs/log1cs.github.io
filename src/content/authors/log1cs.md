@@ -7,4 +7,5 @@ website: 'https://log1cs.github.io'
 github: 'https://github.com/log1cs'
 linkedin: 'https://linkedin.com/in/log1cs'
 mail: 'tuan73176@gmail.com'
+telegram: 'https://t.me/log1cs'
 --- 

@@ -39,6 +39,10 @@ export const SOCIAL_LINKS: SocialLink[] = [
     href: 'mailto:tuan73176@gmail.com',
     label: 'Email',
   },
+  {
+    href: 'https://t.me/log1cs',
+    label: 'Telegram',
+  },
 ]
 
 export const ICON_MAP: IconMap = {
@@ -46,4 +50,5 @@ export const ICON_MAP: IconMap = {
   GitHub: 'lucide:github',
   LinkedIn: 'lucide:linkedin',
   Email: 'lucide:mail',
+  Telegram: 'lucide:send',
 }
