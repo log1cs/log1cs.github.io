@@ -1,0 +1,315 @@
+---
+title: 'Hướng dẫn deploy web project lên GitHub bằng GitHub Actions'
+description: 'CI/CD made easy.'
+date: 2025-10-17
+tags: ['v1.0.0']
+image: './banner.jpg'
+authors: ['log1cs']
+---
+
+Hola mọi người, hôm nay mình sẽ nói về GitHub Workflow và cách để mọi người có thể deploy project lên. Thực ra thì cũng khá đơn giản thôi, và GitHub Workflow có thể sử dụng cho nhiều mục đích khác chứ không chỉ đơn thuần là nhét mỗi cái source web rồi cho nó host tạm đâu ^^ còn nhiều trò vui hơn mà bạn có thể làm với nó.
+
+## Yêu cầu cần thiết
+- Biết sử dụng Git (cũng như là GitHub).
+- Scripting cơ bản.
+- Bạn đã setup được website của mình chạy được ở local.
+
+## GitHub Workflow là gì? Tại sao lại cần thiết?
+Nói đơn giản thì nó là 1 phần của [GitHub Action](https://github.com/features/actions). Đại loại là mỗi 1 lần bạn push 1 thay đổi (commit) lên repo của bạn, thì hệ thống Workflow (hoặc [CI/CD](https://200lab.io/blog/ci-cd-la-gi)) của  GitHub sẽ tự động rebuild lại mọi thứ mà bạn không cần phải nhúng tay vào.
+
+Nói suông thì khó hiểu, nên mình sẽ ví dụ đơn giản cho thực tế hơn nhé.
+
+Chẳng hạn bạn có 1 project web đơn giản. Mỗi 1 lần bạn đẩy những thay đổi của bạn vào source code, bạn sẽ phải làm các **chuỗi công việc** như sau để áp dụng thay đổi của bạn vào project đó:
+
+- Dừng A đang chạy (**1 phút**)
+- Tạo file token B, sau đó truyền file B xuống cho service C (**1 phút**)
+- C sau đó nhận file mà B truyền xuống, xong sẽ check qua và build thử preview của website (tuỳ thuộc vào độ lớn của source code, máy yếu, nước mưa rơi vào máy, trời nóng quá thì máy lag, quên dấu `;`,... **cho hẳn luôn 5 phút**)
+- Build xong thì bật A lên để deploy (**1 phút**)
+
+*Ở trên chỉ là ví dụ thôi nhé ^^ ngoài đời không tra tấn thế này đâu, chắc là kinh khủng hơn.*
+
+Tưởng tượng rằng mỗi lần thủ công mất ngần đó thời gian để chạy mọi thứ bằng tay thì có khi đối thủ của bạn đã cho bạn hít khói rồi. Phải chăng bạn có mong rằng, ước gì trên **Trái Đất** này có cái gì đó có thể tự động hoá cho mình hết cái chuỗi công việc như tra tấn đó, để mình còn bận ngủ 8 tiếng, ăn ba bữa và xách ba lô thi giải Olympic F1 chạy ra khỏi chỗ làm nhanh nhất chứ ^^
+
+Đương nhiên là có. **CI/CD** chứ còn gì nữa.
+
+Mình đã đề cập về **CI/CD** ở bên trên, và mình sẽ không đi quá sâu vào khái niệm này. **CI/CD** sẽ giúp bạn tự động hoá mọi thứ, từ lúc bạn đẩy source code lên, thì **CI/CD** sẽ tự động chạy hết tất các các pipeline mà bạn đã setup (*đương nhiên là bạn phải setup trước, không nó biết gì mà chạy*).
+
+Nghĩa là, như cái chuỗi công việc đau khổ và vô cùng tốn thời gian phía trên, giờ sẽ được tự động hoá hoàn toàn. Cứ khi nào bạn đẩy thay đổi lên là CI sẽ tự động chạy mọi thứ cho bạn, để thời gian còn làm việc khác chứ 😃
+
+## Cách setup Workflow cho website
+Hướng dẫn này sẽ tối giản mọi thứ để cho mọi người có thể deploy được website 1 cách dễ dàng nhất.
+
+Đầu tiên, tại repo hiện tại của bạn, chọn vào phần Settings đã được tô đỏ ở bên dưới.
+
+![image](https://hackmd.io/_uploads/BkyTliA6gl.png)
+
+Tiếp theo, chọn vào Pages.
+
+![image](https://hackmd.io/_uploads/B1BxWsCTee.png)
+
+Giờ thì bạn đang ở trong mục Pages. Mục này sẽ giúp bạn có thể deploy được website sử dụng chính infra của GitHub để host mà không phải tốn tiền mua VPS để host hay làm mấy thứ khác lằng nhằng chỉ để deploy mỗi cái website.
+
+Link dẫn đến website của bạn sẽ có dạng như sau:
+```
+https://<your_username>.github.io/<reponame>
+```
+
+Trong đó:
+- `your_username` là username GitHub của bạn.
+- `reponame` là tên repository của bạn.
+
+![image](https://hackmd.io/_uploads/HJMjbiCpee.png)
+
+Tiếp theo đó, chọn "Build and deployment" và chọn GitHub Actions.
+
+![image](https://hackmd.io/_uploads/ryY1fsRpgl.png)
+
+Bạn sẽ có 2 lựa chọn ở đây. Bạn có thể chọn Jekyll hoặc Static HTML đều được. Static HTML có thể sẽ đơn giản với những người không biết nhiều về lập trình website hoặc chỉ cần làm một trang web đơn giản. 
+
+Jekyll sẽ là hợp lý nếu bạn muốn làm static blog website. Đơn giản, dễ dùng, ship nhanh. Đi clone cái template của người khác về xong bạn có thể thêm tuỳ chỉnh của mình vào theo ý muốn, không ấy thì clone xong về viết blog bằng Markdown luôn cũng được ^^
+
+Nói chung là tuỳ nhu cầu sử dụng. Ở đây mình chỉ giới thiệu ngắn gọn qua về Jekyll và HTML để cho bạn lựa chọn. Đương nhiên bạn có thể vận dụng GitHub Workflow để deploy nhiều thể loại khác như **Flask, Django, React, NextJS, Astro,...**
+
+Ở đây mình sẽ sử dụng HTML thôi, tại project của mình cũng rất đơn giản. Đơn giản là vì công việc chỉ có upload cái file lên, truyền file vào trong đoạn code để dự đoán malware, xử lý xong rồi in kết quả ra màn hình là xong.
+
+![image](https://hackmd.io/_uploads/B11gmj0Txg.png)
+
+Nói chung là bạn muốn dùng gì thì chọn **Configure** cái đó.
+
+Chọn xong thì bạn sẽ được redirect qua cái trình edit text của GitHub. Đây là file workflow để bạn có thể tự động hoá mọi thứ sau này.
+
+![image](https://hackmd.io/_uploads/BkFRLjRale.png)
+
+Mình sẽ giải thích qua một vài properties quan trọng ở đây:
+
+```yml
+# Simple workflow for deploying static content to GitHub Pages
+name: Deploy static content to Pages
+```
+
+Cái này là tên của Action. Bạn có thể đặt tên là gì cũng được. Tên này sẽ hiển thị khi bạn bấm trong Action.
+
+Cụ thể là nó sẽ nhìn như thế này:
+
+![image](https://hackmd.io/_uploads/HkbTb4y0ee.png)
+
+Tiếp theo, về các event trong repo:
+
+```yaml
+on:
+  # Runs on pushes targeting the default branch
+  push:
+    branches: ["local"]
+```
+
+Với những property xếp chồng như này, bạn có thể hiểu 3 dòng trên khi gộp lại thành 1 dòng sẽ trông như thế này (và nó vẫn hợp lệ):
+
+```yaml
+on.push.branches: ["local"]
+```
+
+Với property `on` thì property này sẽ trigger Actions khi mà 1 event nào đó diễn ra. Chẳng hạn với ví dụ này, `on.push` sẽ trigger workflow chỉ khi bạn đẩy các commit mới lên (***push***).
+
+Bạn có thể tìm hiểu thêm về các event khác có trong thuộc tính `on` tại đây: [Events that trigger workflows](https://docs.github.com/en/actions/reference/workflows-and-actions/events-that-trigger-workflows).
+
+Property `branches` sẽ được dùng để khai báo branch sẽ được sử dụng khi chạy GitHub Actions. Chẳng hạn khi bạn muốn deploy code bằng branch nào thì thay branch ở trong đó là được.
+
+Nếu bạn để `branches: ["**"]` thì pipeline sẽ chạy ở tất cả các branches.
+
+Tiếp theo, về các quyền trong repo:
+
+```yaml
+permissions:
+  contents: read    # Cho phép đọc code trong repo
+  pages: write      # Cho phép ghi (deploy) lên GitHub Pages
+  id-token: write   # Cấp quyền xác thực (an toàn, không cần token thủ công)
+```
+
+Nếu bạn không cấp các quyền này, GitHub Pages action sẽ bị lỗi 403 Permission denied.
+
+```yaml!
+# Allow only one concurrent deployment, skipping runs queued between the run in-progress and latest queued.
+# However, do NOT cancel in-progress runs as we want to allow these production deployments to complete.
+concurrency:
+  group: "pages"
+  cancel-in-progress: false
+```
+
+Đơn giản là bạn hiểu property này sẽ giúp cho các workflow chạy theo thứ tự, và không chạy đè lên nhau, production safety thôi ^^
+
+**Ví dụ đơn giản:**
+- Bạn có 2 commit đang chờ deploy.
+- GitHub Pages giống như thủ quỹ — chỉ phát tiền cho một người một lần.
+- Ai đến sau thì phải xếp hàng, chờ người trước deploy xong rồi mới tới lượt.
+
+Như vậy thì website của bạn sẽ không bị “2 ông cùng sửa 1 file index.html” dẫn đến việc website bị lỗi/chạy không ổn định.
+
+À, tiện nhắc đến *xếp hàng* ở đây, bạn có nghĩ rằng - nếu như cái action sau chạy mà lỗi, thì cái commit đó có được deploy lên không?
+
+Câu trả lời là **không**. Khi một job trong workflow fail (ví dụ: build lỗi, thiếu file), GitHub Actions sẽ dừng hẳn pipeline, không deploy lên Pages.
+
+Đó là những thuộc tính cơ bản liên quan đến setup GitHub Actions. Giờ chúng ta đến phần setup môi trường, và hướng dẫn tạo thêm actions khác ngoài deploy. Mình sẽ cố gắng giải thích dễ hiểu về các property còn lại ở đây ^^
+
+```yaml
+jobs:
+  # Single deploy job since we're just deploying
+  deploy:
+    environment:
+      # name: khai báo tên môi trường, ở đây chúng ta dùng GitHub Pages.
+      name: github-pages
+      # url: Như đã nói ở trên.
+      url: ${{ steps.deployment.outputs.page_url }} # https://<your_username>.github.io/<reponame>
+    # Chọn image để deploy server. Ở đây chạy trên image Ubuntu mới nhất của GitHub.
+    runs-on: ubuntu-latest
+    # Linh hồn của một job. Mọi lệnh sẽ được nằm ở đây.
+    steps:
+      # name: Tên của pipeline
+      # uses: Ở đây chúng ta sử dụng các actions có sẵn của GitHub.
+      # Bạn có thể tìm các actions và giới thiệu qua về các actions đó ở đây: https://github.com/actions
+      ## Checkout - Clone repo hiện tại về máy ảo của GitHub.
+      - name: Checkout
+        uses: actions/checkout@v4
+      ## Setup Pages - Cấu hình môi trường cho website
+      - name: Setup Pages
+        uses: actions/configure-pages@v5
+      ## Upload artifact - Pack code thành artifact để deploy
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          # Upload entire repository
+          path: '.'
+      ## Deploy to GitHub Pages - Deploy code lên Pages
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
+```
+
+Thực ra thì phần này bạn có thể để nguyên cũng được, cũng không quan trọng lắm, hiểu là được. Nhưng mình vẫn muốn giải thích rõ phần này ra ở đây, lỡ đâu nó lại quan trọng với bạn sau này ^^
+
+Nếu bạn đã hiểu (1/100 cũng được) thì có thể nhấn **Commit changes** rồi chúng ta sẽ tiếp tục với vấn đề khác.
+
+Giờ bạn sẽ thấy gần cái commit message của mình có một chấm vàng (hoặc dấu tick, hoặc cross).
+
+Sẽ có 3 trạng thái:
+- Dấu tick màu xanh: deploy thành công
+- Chấm vàng: workflow đang chạy
+- Còn X màu đỏ: Là một trong những job của bạn đã fail trong 1 cái pipeline nào đó.
+
+![image](https://hackmd.io/_uploads/ByOcUV1Ceg.png)
+
+## Tự setup một pipeline mới
+Ví dụ đi, nếu code của bạn chỉ có hiển thị mỗi chữ `Hello world` thì cũng không cần thiết phải cần setup quá nhiều. Nhưng có những website, khi bạn upload file lên để xử lý dữ liệu, ví dụ như [Online Binwalk Utility](https://www.unroll.ing/), khi mà bạn muốn upload file lên để đọc các content bị ẩn trong file, thì họ sẽ xử lý file của bạn kiểu gì?
+
+Với ví dụ trên, nếu không cài các thư viện hỗ trợ cho việc xử lý file, thì nó vẫn chạy được bình thường thôi. Cụ thể là chạy bằng niềm tin và hi vọng ^^
+
+Đùa vậy thôi, giờ mình sẽ nói về việc setup một pipeline riêng biệt để cài đặt, setup môi trường cho website của bạn.
+
+Việc các bạn setup website ở local như thế nào thì trên Pipeline các bạn cũng phải setup cho nó đúng như vậy. Cái image của GitHub nó cũng như cái máy tính của các bạn ban đầu vậy, nếu các bạn không cài dependencies/redist để chạy website, thì nó có chạy được đâu? Phải cài rồi thì mới chạy được chứ đúng không, không có `npm`, không có Jekyll thì làm sao mà preview được website trên local, bạn tính preview bằng trí tưởng tượng à 😃
+
+Mình sẽ lấy repo [này](https://github.com/log1cs/Frostbite) của mình để làm ví dụ (của mình cài thư viện Python là chính). Giờ mình muốn cài đặt các thư viện sau vì project của mình yêu cầu các thư viện sau phải được cài đặt:
+
+```python
+scikit-learn
+pefile
+pandas
+numpy
+pickle
+matplotlib
+```
+
+Thường thì các bạn hay dùng `pip install` + `<thư viện>` đúng không. Điều này sẽ hơi bất tiện nếu các bạn tính làm một project [OSS](https://en.wikipedia.org/wiki/Open-source_software) nào đó. Chẳng hạn ở đây mình cái có 5-6 cái thư viện, nhưng chẳng hạn project sử dụng 100 cái thư viện, thì bạn tính cho người ta cài bằng tay 100 cái thư viện đó à?
+
+PowerShell/CMD hoặc Terminal của Linux/UNIX cũng chỉ có giới hạn kí tự được nhập trong một command thôi, chứ không phải nhập 9999 kí tự vào thì nó cũng load được hết cả 9999 kí tự đâu ^^
+
+Bẻ thành các chunk nhỏ để chạy? Không, trò đó hơi thiếu chuyên nghiệp.
+
+Vậy nên, mình sẽ bày cho các bạn cách này mình thấy khá tiện và hay của Python, và trò này có thể có (hoặc không) áp dụng được cho project của bạn (tuỳ ngôn ngữ mà bạn sử dụng):
+
+### Với Python
+
+Tạo 1 file tên là `requirements.txt`, hoặc tên gì cũng được. Trong file đó bạn ghi hết từng thư viện bạn dùng trong project của mình:
+
+```
+scikit-learn
+pefile
+pandas
+numpy
+pickle
+matplotlib
+```
+
+Nếu project của bạn yêu cầu thư viện nào đó phải ở một phiên bản nhất định, bạn có thể gắn thêm dấu `==<phiên bản>` của thư viện đó, thì lúc cài thư viện thì `pip` sẽ chỉ tải thư viện với phiên bản mà bạn đã hardcode ở trong requirements thôi.
+
+Ví dụ, mình muốn cài thư viện `scikit-learn` nhưng mình muốn nó buộc phải ở phiên bản `1.2.2` vì mình train model bằng scikit-learn 1.2.2, nên mình buộc phải dùng scikit-learn 1.2.2 cho project, thì có thể được xử lý như sau:
+
+```
+scikit-learn==1.2.2 # Hardcode phiên bản thư viện ở 1.2.2, phiên bản này phải tồn tại ở pip database, nếu không sẽ không tải về được.
+pefile
+pandas
+numpy
+pickle
+matplotlib
+```
+
+Và sau này khi bạn hoặc người khác cần cài thư viện, thì bạn chỉ cần chạy lệnh dưới và pip sẽ tự động cài hết thư viện cho bạn:
+
+```bash
+pip install -r requirements.txt
+```
+
+Trông đơn giản hơn nhiều đúng không ^^
+
+OK, và giờ mình muốn setup nó trên pipeline để cài đặt thư viện trên cái pages của mình nữa, thì xử lý như thế nào?
+
+Tại repo của bạn, vào thư mục `.github/workflows` và tạo 1 file YML (nhớ để không dấu) để setup dependencies:
+
+Ví dụ:
+
+```yaml
+# Tên của pipeline
+name: Install Python dependencies
+
+# Job sẽ được chạy khi commit mới được đẩy lên,
+# hoặc PR (pull request) nào đó đã được merge.
+on:
+  push:
+    branches: ["**"]
+  pull_request:
+    branches: ["**"]
+
+# Setup pipeline
+jobs:
+  install-requirements:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # Cài đặt Python, chúng ta có thể sử dụng luôn Actions có sẵn.
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11' # Hardcode python version ở đây, nếu bạn muốn. Không bạn có thể để mới nhất luôn cũng được.
+
+      # Cài đặt thư viện
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip 
+          pip install -r requirements.txt
+```
+
+Với property `run`, bạn có thể chèn hoặc lồng nhiều command vào trong đó. Bạn cứ tưởng tượng như mình đã hiểu hết cái repo này rồi, giờ vấn đề của mình là cứ nhập command rồi di chuyển từ thư mục này qua thư mục kia để setup thôi :D
+
+Sau đó thì việc của bạn sẽ là lưu file lại và đẩy lên repo của bạn là xong. Giờ bạn sẽ thấy thêm cái pipeline mới vừa được tạo:
+
+![image](https://hackmd.io/_uploads/HkUDZBkCgx.png)
+
+Nếu bạn muốn làm nhiều trò hơn với GitHub Actions, bạn có thể tham khảo tại đây: [sdras/awesome-actions](https://github.com/sdras/awesome-actions).
+
+### Vài ví dụ về GitHub Workflow khác (không chỉ gói gọn lại trong website)
+- [Build Linux kernel bằng GitHub Actions](https://github.com/andrewmcwatters/linux-workflow/blob/main/.github/workflows/makefile.yml)
+- [Build Android apps bằng GitHub Actions (SebaUbuntu/Athena)](https://github.com/SebaUbuntu/Athena/blob/master/.github/workflows/build.yml) - cái này bạn có thể xem được pipeline của họ luôn
+
+Và đó là hướng dẫn của mình để setup GitHub Actions để deploy website qua GitHub, nếu bạn có khó hiểu ở đâu thì có thể hỏi tại comment ^^
+
+Have fun building your own!
